@@ -22,6 +22,10 @@ NSPR_DIR   := $(CURDIR)/nsprpub
 
 # NSPR_SIXTYFOUR is defined in erlang_js/rebar.config
 
+ifneq "$(findstring aarch,$(shell uname -m))" ""
+ARCH_CFLAGS := -D__arm__ -D__ARMEL__
+endif
+
 js: $(LIB_DIR)/libjs.a
 
 $(LIB_DIR)/libjs.a: $(LIB_DIR)/libnspr4.a
@@ -31,7 +35,7 @@ $(LIB_DIR)/libjs.a: $(LIB_DIR)/libnspr4.a
 	done
 	@$(MAKE) -C $(JS_DIR)/src BUILD_OPT=1 JS_DIST=$(SYSTEM_DIR) \
 		JS_THREADSAFE=1 \
-		XCFLAGS="-DHAVE_VA_COPY -DVA_COPY=va_copy $(CFLAGS)" \
+		XCFLAGS="-DHAVE_VA_COPY -DVA_COPY=va_copy $(CFLAGS) $(ARCH_CFLAGS)" \
 		XLDFLAGS="$(LDFLAGS)" \
 		-f Makefile.ref
 	@mkdir $(INC_DIR)/js
