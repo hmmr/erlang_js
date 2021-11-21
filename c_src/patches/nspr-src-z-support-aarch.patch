@@ -1,0 +1,57 @@
+--- c_src/nsprpub/build/autoconf/config.guess
++++ c_src/nsprpub/build/autoconf/config.guess
+@@ -820,6 +820,9 @@ EOF
+     i*86:Minix:*:*)
+ 	echo ${UNAME_MACHINE}-pc-minix
+ 	exit ;;
++    aarch??:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
+     arm*:Linux:*:*)
+ 	echo ${UNAME_MACHINE}-unknown-linux-gnu
+ 	exit ;;
+--- c_src/nsprpub/configure
++++ c_src/nsprpub/configure
+@@ -3947,6 +3947,16 @@ EOF
+             CXX="$CXX -m32"
+         fi
+         ;;
++    aarch??)
++        cat >> confdefs.h <<\EOF
++#define __arm__ 1
++#define __ARMEL__ 1
++EOF
++        if test -z "$USE_64"; then
++            CC="$CC -m32"
++            CXX="$CXX -m32"
++        fi
++        ;;
+     ppc|powerpc)
+         PR_MD_ASFILES=os_Linux_ppc.s
+         ;;
+--- c_src/nsprpub/configure.in
++++ c_src/nsprpub/configure.in
+@@ -1465,6 +1465,23 @@ tools are selected during the Xcode/Developer Tools installation.])
+             CXX="$CXX -m32"
+         fi
+         ;;
++    aarch??)
++        AC_DEFINE(__arm__)
++        AC_DEFINE(__ARMEL__)  # shout out across decades to the next
++                              # poor soul tasked with patching this
++                              # file again: figure out the endianness?
++        # Also, for erlang_js (building which is our only concern), we don't
++        # even bother to run autoconf. Instead, we run configure directly,
++        # which is patched accordingly. This diff becomes pointless, but we
++        # do it, for propriety's sake.
++        if test -n "$USE_64"; then
++            PR_MD_ASFILES=os_Linux_x86_64.s
++        else
++            PR_MD_ASFILES=os_Linux_x86.s
++            CC="$CC -m32"
++            CXX="$CXX -m32"
++        fi
++        ;;
+     ppc|powerpc)
+         PR_MD_ASFILES=os_Linux_ppc.s
+         ;;
